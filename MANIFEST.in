@@ -1,3 +1,2 @@
 include LICENSE.rst
 include README.rst
-recursive-include services
