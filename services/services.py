@@ -20,6 +20,17 @@ class ServiceResource(Resource):
         always_return_data = True
         serializer = Serializer(formats=['json'])
 
+    def _handle_500(self, request, exception):
+        data = {
+            'error_message': str(exception),
+            'error_code': getattr(exception, 'id',
+                                  exception.__class__.__name__),
+            'error_data': getattr(exception, 'data', {})
+        }
+        serialized = self.serialize(request, data, 'application/json')
+        return http.HttpApplicationError(content=serialized,
+                    content_type='application/json; charset=utf-8')
+
 
 class ErrorResource(ServiceResource):
 

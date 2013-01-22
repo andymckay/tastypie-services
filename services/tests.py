@@ -30,7 +30,7 @@ class TestStatus(TestCase):
         self.list_url = '/services/status/'
 
     def test_working_status(self):
-        with self.settings(SERVICES_STATUS_MODULE='services.test_status'):
+        with self.settings(SERVICES_STATUS_MODULE='services.status_test'):
             res = self.client.get(self.list_url)
             eq_(res.status_code, 200)
 
