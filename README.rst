@@ -8,12 +8,14 @@ Install using pip::
 
         pip install tastypie-services
 
+Note: version 2 renamed the lib from services to tastypie_services.
+
 Configuration
 -------------
 
 Add to your urls::
 
-        from services.urls import services
+        from tastypie_services.urls import services
 
         urlpatterns = patterns('',
                 ...
@@ -30,9 +32,9 @@ object is. For example::
 
         SERVICES_STATUS_MODULE = 'lib.services.resources'
 
-Then in `lib.services.resources`::
+Then in `lib.tastypie_services.resources`::
 
-        from services.services import StatusObject as Base
+        from tastypie_services.services import StatusObject as Base
 
         class StatusObject(Base):
 
