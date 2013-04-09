@@ -1,11 +1,15 @@
+import logging
+
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.utils.importlib import import_module
 from django.views import debug
 
+
 from tastypie import fields
 from tastypie import http
-from tastypie.exceptions import ImmediateHttpResponse
+from tastypie.exceptions import ImmediateHttpResponse, NotFound
 from tastypie.resources import Resource
 from tastypie.serializers import Serializer
 
@@ -21,6 +25,31 @@ class ServiceResource(Resource):
         serializer = Serializer(formats=['json'])
 
     def _handle_500(self, request, exception):
+        import sys
+        import traceback
+        the_trace = '\n'.join(traceback.format_exception(*(sys.exc_info())))
+
+        log = logging.getLogger('django.request.tastypie')
+        log.error('Internal Server Error: %s' % request.path,
+                  exc_info=sys.exc_info(),
+                  extra={'status_code': 500, 'request': request})
+
+        # Only send email to admins if we're not in DEBUG mode.
+        if not (settings.DEBUG or
+                isinstance(exception, (NotFound, ObjectDoesNotExist))):
+            from django.core.mail import mail_admins
+            subject = 'Error (%s IP): %s' % \
+                      ((request.META.get('REMOTE_ADDR')
+                      in settings.INTERNAL_IPS
+                      and 'internal' or 'EXTERNAL'), request.path)
+            try:
+                request_repr = repr(request)
+            except:
+                request_repr = "Request repr() unavailable"
+
+            message = "%s\n\n%s" % (the_trace, request_repr)
+            mail_admins(subject, message, fail_silently=True)
+
         data = {
             'error_message': str(exception),
             'error_code': getattr(exception, 'id',
@@ -29,7 +58,7 @@ class ServiceResource(Resource):
         }
         serialized = self.serialize(request, data, 'application/json')
         return http.HttpApplicationError(content=serialized,
-                    content_type='application/json; charset=utf-8')
+                                         content_type='application/json; charset=utf-8')
 
 
 class ErrorResource(ServiceResource):
@@ -63,9 +92,9 @@ class SettingsResource(ServiceResource):
 
     def get_resource_uri(self, bundle):
         return reverse('api_dispatch_detail',
-                        kwargs={'api_name': 'services',
-                                'resource_name': 'settings',
-                                'pk': bundle.obj.pk})
+                       kwargs={'api_name': 'services',
+                               'resource_name': 'settings',
+                               'pk': bundle.obj.pk})
 
     def obj_get(self, request, **kwargs):
         pk = kwargs['pk']
@@ -143,8 +172,9 @@ class StatusResource(ServiceResource):
         resource_name = 'status'
 
     def obj_get(self, request, **kwargs):
-        print getattr(settings, 'SERVICES_STATUS_MODULE',
-                         'services.services')
+        print getattr(settings,
+                      'SERVICES_STATUS_MODULE',
+                      'services.services')
 
         client = getattr(settings, 'SERVICES_STATUS_MODULE',
                          'services.services')
