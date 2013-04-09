@@ -18,17 +18,17 @@ class TestError(Exception):
 
 class ServiceResource(Resource):
 
+    def __init__(self, set_handler=None, *args, **kw):
+        super(ServiceResource, self).__init__(*args, **kw)
+        if set_handler:
+            self._handle_500 = partial(set_handler, self)
+
     class Meta:
         always_return_data = True
         serializer = Serializer(formats=['json'])
 
 
 class ErrorResource(ServiceResource):
-
-    def __init__(self, set_handler=None, *args, **kw):
-        super(ErrorResource, self).__init__(*args, **kw)
-        if set_handler:
-            self._handle_500 = partial(set_handler, self)
 
     class Meta(ServiceResource.Meta):
         list_allowed_methods = ['get']
@@ -139,9 +139,6 @@ class StatusResource(ServiceResource):
         resource_name = 'status'
 
     def obj_get(self, request, **kwargs):
-        print getattr(settings, 'SERVICES_STATUS_MODULE',
-                         'services.services')
-
         client = getattr(settings, 'SERVICES_STATUS_MODULE',
                          'services.services')
         obj = import_module(client).StatusObject()
