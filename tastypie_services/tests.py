@@ -23,16 +23,16 @@ from nose.tools import eq_
 
 @patch.object(settings, 'DEBUG', False)
 class TestStatus(TestCase):
-    urls = 'services.test_urls'
+    urls = 'tastypie_services.test_urls'
 
     def setUp(self):
         self.api_name = 'services'
         self.list_url = '/services/status/'
 
     def test_working_status(self):
-        with self.settings(SERVICES_STATUS_MODULE='services.status_test'):
+        with self.settings(SERVICES_STATUS_MODULE='tastypie_services.status_test'):
             res = self.client.get(self.list_url)
-            eq_(res.status_code, 200)
+            eq_(res.status_code, 200, res.content)
 
     def failed(self, res, on):
         eq_(res.status_code, 500)
@@ -42,7 +42,7 @@ class TestStatus(TestCase):
 
 @patch.object(settings, 'DEBUG', False)
 class TestError(TestCase):
-    urls = 'services.test_urls'
+    urls = 'tastypie_services.test_urls'
 
     def setUp(self):
         self.api_name = 'services'
