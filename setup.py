@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='tastypie-services',
-    version='0.2',
+    version='0.2.1',
     description='Service URLs for tastypie',
     long_description=open('README.rst').read(),
     author='Andy McKay',
