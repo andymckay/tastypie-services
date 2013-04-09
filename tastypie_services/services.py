@@ -38,13 +38,13 @@ class ServiceResource(Resource):
         if not (settings.DEBUG or
                 isinstance(exception, (NotFound, ObjectDoesNotExist))):
             from django.core.mail import mail_admins
-            subject = 'Error (%s IP): %s' % \
-                      ((request.META.get('REMOTE_ADDR')
-                      in settings.INTERNAL_IPS
-                      and 'internal' or 'EXTERNAL'), request.path)
+            subject = ('Error (%s IP): %s' %
+                      (('internal' if request.META.get('REMOTE_ADDR')
+                        in settings.INTERNAL_IPS else 'EXTERNAL'),
+                       request.path))
             try:
                 request_repr = repr(request)
-            except:
+            except Exception:
                 request_repr = "Request repr() unavailable"
 
             message = "%s\n\n%s" % (the_trace, request_repr)
