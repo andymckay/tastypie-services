@@ -1,3 +1,5 @@
+from functools import partial
+
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils.importlib import import_module
@@ -20,19 +22,13 @@ class ServiceResource(Resource):
         always_return_data = True
         serializer = Serializer(formats=['json'])
 
-    def _handle_500(self, request, exception):
-        data = {
-            'error_message': str(exception),
-            'error_code': getattr(exception, 'id',
-                                  exception.__class__.__name__),
-            'error_data': getattr(exception, 'data', {})
-        }
-        serialized = self.serialize(request, data, 'application/json')
-        return http.HttpApplicationError(content=serialized,
-                    content_type='application/json; charset=utf-8')
-
 
 class ErrorResource(ServiceResource):
+
+    def __init__(self, set_handler=None, *args, **kw):
+        super(ErrorResource, self).__init__(*args, **kw)
+        if set_handler:
+            self._handle_500 = partial(set_handler, self)
 
     class Meta(ServiceResource.Meta):
         list_allowed_methods = ['get']
